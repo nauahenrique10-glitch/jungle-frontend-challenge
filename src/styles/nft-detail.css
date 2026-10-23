@@ -1,0 +1,49 @@
+.nft-card:has(.nft-detail-link) { position: relative; }
+.nft-detail-link::after { content: ''; position: absolute; inset: 0; border-radius: 16px; }
+.nft-detail-link:focus-visible::after { outline: 2px solid var(--primary); outline-offset: 4px; }
+.nft-card .card-favorite-preview { z-index: 1; }
+.functional-detail .detail-thumbnails > button { min-width: 0; border-radius: 6px; }
+.functional-detail .detail-thumbnails > button[aria-pressed="true"] { outline: 1px solid var(--primary); outline-offset: 2px; }
+.functional-detail .quantity-control { position: relative; }
+.functional-detail .quantity-control input { width: 3ch; min-width: 2ch; max-width: 8ch; text-align: center; padding: 0; background: transparent; color: var(--foreground); }
+.functional-detail .quantity-control button:disabled { opacity: .45; }
+.functional-detail .edition-preview button[aria-pressed="true"] { border-color: var(--primary); color: var(--primary); font-weight: 700; }
+.functional-detail .detail-summary { min-height: 72px; margin-bottom: 8px; }
+.functional-detail .detail-metadata dd { min-width: 0; overflow-wrap: anywhere; }
+.functional-detail .detail-availability-note { color: var(--muted-foreground); font-size: 10px; line-height: 15px; margin-top: 12px; }
+.detail-rating-desktop { display: inline-flex; align-items: center; gap: 6px; float: right; font-size: 12px; line-height: 18px; color: var(--muted-foreground); font-weight: 400; }
+.detail-rating-desktop svg { width: 14px; height: 14px; color: var(--primary); fill: currentColor; }
+.detail-rating-mobile { display: none; }
+.functional-detail .related-artworks article > a > div { padding: 8px 4px; background: var(--card); }
+.detail-skeleton-square { aspect-ratio: 1; border-radius: 16px; }
+.detail-skeleton-title { width: 80%; height: 45px; border-radius: 4px; margin-bottom: 4px; }
+.detail-skeleton-line { display: block; width: 40%; height: 20px; border-radius: 4px; }
+.detail-skeleton-summary { border-radius: 4px; margin-top: 27px; }
+.detail-skeleton-metadata { height: 92px; border-radius: 4px; }
+.detail-skeleton-copy { height: 260px; border-radius: 4px; }
+.detail-skeleton-purchase { height: 60px; border-radius: 30px; }
+.detail-mobile-favorite { display: none; }
+.detail-feedback { margin: 24px 0; min-height: 450px; }
+.detail-feedback a { color: var(--primary); }
+@media (min-width: 801px) {
+ .functional-detail .detail-information { min-height: 510px; }
+ .functional-detail .detail-price { min-height: 34px; }
+}
+@media (max-width: 800px) {
+ .functional-detail .detail-information { min-height: 340px; }
+ .functional-detail .detail-title h1 { font-size: 20px; line-height: 28px; }
+ .functional-detail .detail-title:has(+ .detail-price + .detail-rating-mobile) h1 { max-width: calc(100% - 88px); }
+ .functional-detail .detail-title > button { display: none; }
+ .functional-detail .detail-availability-note { display: none; }
+ .functional-detail .detail-mobile-purchase strong { font-size: 18px; line-height: 24px; }
+ .detail-rating-desktop { display: none; }
+ .functional-detail .detail-rating-mobile { position: absolute; right: 24px; top: 32px; display: inline-flex; align-items: center; gap: 4px; color: var(--muted-foreground); border: 1px solid var(--primary); border-radius: 20px; padding: 2px 5px; font-size: 12px; line-height: 18px; }
+ .detail-rating-mobile svg { width: 14px; height: 14px; fill: var(--primary); color: var(--primary); }
+ .functional-detail .detail-mobile-favorite { position: absolute; display: grid; place-items: center; right: 0; top: 0; width: 36px; height: 36px; color: var(--primary); border: 1px solid var(--border); border-radius: 50%; background: var(--card); }
+ .detail-skeleton-title { height: 28px; margin-bottom: 12px; }
+ .detail-skeleton-summary { margin-top: 0; }
+ .detail-skeleton-sections .related-artworks { display: none; }
+ .detail-skeleton-sections .detail-mobile-purchase > .detail-skeleton-line { height: 28px; }
+ .functional-detail .detail-skeleton .detail-main-art { border-radius: 24px; overflow: hidden; }
+ .detail-feedback { margin: 24px; min-height: 450px; }
+}

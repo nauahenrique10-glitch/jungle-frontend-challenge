@@ -1,0 +1,277 @@
+import { test, expect } from './test-fixture'
+import { login, demoPassword } from './auth-helpers'
+import { addNft, logout, openCart } from './commerce-helpers'
+import { api, confirmed, quoteAndConnect, scenario, setupCheckout } from './checkout-helpers'
+
+test.setTimeout(90_000)
+
+test('checkout protegido retorna após login e preserva carrinho visitante', async ({ page }) => {
+ await addNft(page)
+ await page.goto('/pagamento')
+ await expect(page.getByRole('form', { name: 'Login', exact: true })).toBeVisible()
+ expect(new URL(page.url()).searchParams.get('redirect')).toBe('/pagamento')
+ const form = page.getByRole('form', { name: 'Login', exact: true })
+ await form.getByLabel('E-mail', { exact: true }).fill('alice@kurio.test')
+ await form.getByLabel('Senha', { exact: true }).fill(demoPassword)
+ await form.getByRole('button', { name: 'Entrar', exact: true }).click()
+ await expect(page.getByRole('button', { name: 'Cotar compra', exact: true })).toBeVisible()
+ const result = await api(page, 'cart')
+ expect(result.data.items).toHaveLength(1)
+ expect(result.data.items[0].quantity).toBe(1)
+})
+
+test('carrinho vazio bloqueia compra e cotação', async ({ page }) => {
+ await login(page)
+ await page.goto('/pagamento')
+ await expect(page.getByRole('heading', { name: 'Seu carrinho está vazio' })).toBeVisible()
+ await expect(page.getByRole('button', { name: 'Confirmar compra', exact: true })).toHaveCount(0)
+ expect((await api(page, 'quote', { walletId: 'user-alice:primary', network: 'Ethereum' })).status).toBe(409)
+})
+
+test('cotação, cupom, conexão e desconexão passam pela API com precisão ETH', async ({ page }) => {
+ await setupCheckout(page)
+ await openCart(page)
+ await page.getByLabel('Código promocional', { exact: true }).fill('TESTE10')
+ await page.getByRole('button', { name: 'Aplicar', exact: true }).click()
+ await expect(page.getByTestId('cart-discount')).toHaveText('(-) 0.238 ETH')
+ await page.goto('/pagamento')
+ await expect(page.getByRole('button', { name: 'Cotar compra', exact: true })).toBeEnabled()
+ await page.getByRole('radio', { name: 'Carteira Principal', exact: true }).check()
+ await quoteAndConnect(page)
+ await expect(page.getByTestId('quote-total')).toHaveText('2.158 ETH')
+ const quote = (await api(page, 'quote-data')).data
+ expect(quote.network).toBe('Ethereum')
+ expect(quote.networkFeeEth).toBe('0.016')
+ expect(quote.currency).toBe('ETH')
+ await page.getByRole('button', { name: 'Desconectar carteira', exact: true }).click()
+ await expect(page.getByRole('button', { name: 'Conectar carteira simulada', exact: true })).toBeEnabled()
+ await expect(page.getByRole('button', { name: 'Confirmar compra', exact: true })).toBeDisabled()
+})
+
+for (const [configured, total] of [['price-changed', '2.416'], ['fee-changed', '2.398'], ['coupon-expired', '2.396']] as const) {
+ test(`${configured}: revalidação exige nova confirmação explícita`, async ({ page }) => {
+  await setupCheckout(page)
+  if (configured === 'coupon-expired') {
+   await openCart(page)
+   await page.getByLabel('Código promocional', { exact: true }).fill('TESTE10')
+   await page.getByRole('button', { name: 'Aplicar', exact: true }).click()
+   await expect(page.getByTestId('cart-discount')).toHaveText('(-) 0.238 ETH')
+   await page.goto('/pagamento')
+   await expect(page.getByRole('button', { name: 'Cotar compra', exact: true })).toBeEnabled()
+  }
+  await quoteAndConnect(page)
+  await scenario(page, configured)
+  await page.getByRole('button', { name: 'Confirmar compra', exact: true }).click()
+  await expect(page.getByRole('alert').filter({ hasText: 'Os valores mudaram' })).toBeVisible()
+  await expect(page.getByTestId('quote-total')).toHaveText(`${total} ETH`)
+  expect((await api(page, 'orders')).data.orders).toHaveLength(0)
+  await page.getByRole('button', { name: 'Confirmar novos valores', exact: true }).click()
+  await confirmed(page)
+ })
+}
+
+for (const configured of ['wallet-refused', 'wallet-error']) {
+ test(`${configured}: conexão falha sem criar pedido`, async ({ page }) => {
+  await setupCheckout(page)
+  await scenario(page, configured)
+  await page.getByRole('button', { name: 'Conectar carteira simulada', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText(configured === 'wallet-refused' ? 'recusada' : 'Não foi possível conectar')
+  await expect(page.getByRole('button', { name: 'Confirmar compra', exact: true })).toBeDisabled()
+  expect((await api(page, 'orders')).data.orders).toHaveLength(0)
+ })
+}
+
+test('compra completa: pending, refresh, recibo confirmado e carrinho reconciliado uma vez', async ({ page }) => {
+ await setupCheckout(page)
+ await quoteAndConnect(page)
+ await scenario(page, 'pending')
+ await page.getByRole('button', { name: 'Confirmar compra', exact: true }).click()
+ await expect(page.getByRole('heading', { name: 'Pagamento pendente', exact: true })).toBeVisible()
+ const url = page.url()
+ await page.reload()
+ await expect(page.getByRole('heading', { name: 'Pagamento pendente', exact: true })).toBeVisible()
+ await expect(page.getByText('Pagamento confirmado.', { exact: false })).toHaveCount(0)
+ await scenario(page, 'success')
+ await confirmed(page)
+ await page.screenshot({ path: `test-results/checkout-confirmed-${test.info().project.name}.png`, fullPage: true })
+ const before = (await api(page, 'orders')).data.orders[0]
+ expect(before.transactionId).toContain('simulated:')
+ expect(before.quote.totalEth).toBe('2.396')
+ await page.reload()
+ await confirmed(page)
+ expect((await api(page, 'orders')).data.orders[0]).toEqual(before)
+ await openCart(page)
+ await expect(page.getByRole('heading', { name: 'Seu carrinho está vazio' })).toBeVisible()
+ await page.goto(url)
+ await confirmed(page)
+ expect((await api(page, 'cart')).data.items).toHaveLength(0)
+ expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+})
+
+test('pagamento recusado é terminal e mantém o carrinho intacto', async ({ page }) => {
+ await setupCheckout(page)
+ await quoteAndConnect(page)
+ await scenario(page, 'payment-refused')
+ await page.getByRole('button', { name: 'Confirmar compra', exact: true }).click()
+ await expect(page.getByRole('heading', { name: 'Pagamento recusado', exact: true })).toBeVisible()
+ await scenario(page, 'success')
+ await page.reload()
+ await expect(page.getByRole('heading', { name: 'Pagamento recusado', exact: true })).toBeVisible()
+ expect((await api(page, 'cart')).data.items[0].quantity).toBe(2)
+})
+
+test('cliques repetidos, reenvio idempotente e conflito de payload', async ({ page }) => {
+ await setupCheckout(page)
+ await quoteAndConnect(page)
+ await scenario(page, 'pending')
+ const posts: { key: string; input: unknown }[] = []
+ page.on('request', request => { if (new URL(request.url()).pathname === '/api/orders' && request.method() === 'POST') posts.push({ key: request.headers()['idempotency-key'], input: request.postDataJSON() }) })
+ await page.getByRole('button', { name: 'Confirmar compra', exact: true }).evaluate(node => { (node as HTMLButtonElement).click(); (node as HTMLButtonElement).click(); (node as HTMLButtonElement).click() })
+ await expect(page.getByRole('heading', { name: 'Pagamento pendente', exact: true })).toBeVisible()
+ expect(posts).toHaveLength(1)
+ const list = (await api(page, 'orders')).data.orders
+ const same = await api(page, 'create', posts[0])
+ expect(same.status).toBe(200)
+ expect(same.data.id).toBe(list[0].id)
+ const conflict = await api(page, 'create', { ...posts[0], input: { ...(posts[0].input as object), quoteVersion: -1 } })
+ expect(conflict.status).toBe(409)
+ expect(conflict.data.code).toBe('IDEMPOTENCY_CONFLICT')
+ expect((await api(page, 'orders')).data.orders).toHaveLength(1)
+})
+
+test('timeout após commit recupera o mesmo pedido com a mesma chave', async ({ page }) => {
+ await setupCheckout(page)
+ await quoteAndConnect(page)
+ await scenario(page, 'commit-timeout')
+ const request = page.waitForRequest(request => new URL(request.url()).pathname === '/api/orders' && request.method() === 'POST')
+ await page.getByRole('button', { name: 'Confirmar compra', exact: true }).click()
+ const original = await request
+ await expect(page.getByRole('button', { name: 'Recuperar pedido', exact: true })).toBeEnabled({ timeout: 20_000 })
+ const existing = (await api(page, 'orders')).data.orders
+ expect(existing).toHaveLength(1)
+ const retry = page.waitForRequest(request => new URL(request.url()).pathname === '/api/orders' && request.method() === 'POST')
+ await page.getByRole('button', { name: 'Recuperar pedido', exact: true }).click()
+ expect((await retry).headers()['idempotency-key']).toBe(original.headers()['idempotency-key'])
+ await confirmed(page)
+ expect(new URL(page.url()).searchParams.get('orderId')).toBe(existing[0].id)
+ expect((await api(page, 'orders')).data.orders).toHaveLength(1)
+})
+
+test('confirmação preserva quantidades adicionais e snapshot apesar de nova cotação', async ({ page }) => {
+ await setupCheckout(page)
+ await quoteAndConnect(page)
+ await scenario(page, 'pending')
+ await page.getByRole('button', { name: 'Confirmar compra', exact: true }).click()
+ await expect(page.getByRole('heading', { name: 'Pagamento pendente', exact: true })).toBeVisible()
+ const url = page.url()
+ await addNft(page, 'emerald-ape-042', 3)
+ await addNft(page, 'golden-beat-207', 1)
+ await scenario(page, 'success')
+ await page.goto(url)
+ await confirmed(page)
+ const snapshot = (await api(page, 'orders')).data.orders[0]
+ const cart = (await api(page, 'cart')).data.items
+ expect(cart.find((item: { nftId: string }) => item.nftId === 'emerald-ape-042').quantity).toBe(3)
+ expect(cart.find((item: { nftId: string }) => item.nftId === 'golden-beat-207').quantity).toBe(1)
+ await page.goto('/pagamento')
+ await quoteAndConnect(page)
+ await scenario(page, 'price-changed')
+ await page.getByRole('button', { name: 'Confirmar compra', exact: true }).click()
+ await expect(page.getByRole('alert')).toContainText('Os valores mudaram')
+ expect((await api(page, 'order', { id: snapshot.id })).data).toEqual(snapshot)
+})
+
+test('troca de usuário não expõe pedido ou cache privado anterior', async ({ page }) => {
+ await setupCheckout(page)
+ await quoteAndConnect(page)
+ await scenario(page, 'pending')
+ await page.getByRole('button', { name: 'Confirmar compra', exact: true }).click()
+ await expect(page.getByRole('heading', { name: 'Pagamento pendente', exact: true })).toBeVisible()
+ const url = page.url()
+ await logout(page)
+ await login(page, 'bruno@kurio.test')
+ await page.goto(url)
+ await expect(page.getByText('Pedido não encontrado para este usuário.', { exact: true })).toBeVisible()
+ expect((await api(page, 'orders')).data.orders).toHaveLength(0)
+ await expect(page.getByText('Alice Colecionadora', { exact: false })).toHaveCount(0)
+ expect(await page.evaluate(async () => { const path = '/src/app/query-client.ts'; const { queryClient } = await import(path); return queryClient.getQueryCache().getAll().some((query: { queryKey: unknown[] }) => query.queryKey[0] === 'private' && query.queryKey[1] === 'user-alice') })).toBe(false)
+})
+
+test('erro 500 e falha de conexão permitem recuperação sem perder itens', async ({ page }) => {
+ await setupCheckout(page)
+ for (const value of ['error500', 'offline']) {
+  await scenario(page, value)
+  await page.getByRole('button', { name: /^(Cotar compra|Atualizar cotação)$/ }).click()
+  await expect(page.getByRole('alert')).toBeVisible()
+  await scenario(page, 'success')
+  await page.getByRole('button', { name: /^(Cotar compra|Atualizar cotação)$/ }).click()
+  await expect(page.getByTestId('quote-total')).toHaveText('2.396 ETH')
+ }
+ expect((await api(page, 'cart')).data.items[0].quantity).toBe(2)
+ await page.screenshot({ path: `test-results/checkout-review-${test.info().project.name}.png`, fullPage: true })
+ expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+})
+
+test('reduzir quantidade e depois adicionar não consome unidades posteriores à tentativa', async ({ page }) => {
+ await setupCheckout(page)
+ await addNft(page, 'violet-nomad-314', 1)
+ await page.goto('/pagamento')
+ await quoteAndConnect(page)
+ await scenario(page, 'pending')
+ await page.getByRole('button', { name: 'Confirmar compra', exact: true }).click()
+ await expect(page.getByRole('heading', { name: 'Pagamento pendente', exact: true })).toBeVisible()
+ const url = page.url()
+ await openCart(page)
+ const emerald = page.locator('.cart-item[data-nft-id="emerald-ape-042"]')
+ await emerald.getByRole('spinbutton').fill('1')
+ await expect(page.getByTestId('cart-subtotal')).toHaveText('2.58 ETH')
+ await page.locator('.cart-item[data-nft-id="violet-nomad-314"]').getByRole('button', { name: /^Remover / }).click()
+ await expect(page.locator('.cart-item')).toHaveCount(1)
+ await addNft(page, 'emerald-ape-042', 3)
+ await addNft(page, 'violet-nomad-314', 2)
+ await scenario(page, 'success')
+ await page.goto(url)
+ await confirmed(page)
+ const items = (await api(page, 'cart')).data.items
+ expect(items.find((item: { nftId: string }) => item.nftId === 'emerald-ape-042').quantity).toBe(3)
+ expect(items.find((item: { nftId: string }) => item.nftId === 'violet-nomad-314').quantity).toBe(2)
+})
+
+test('timeout da cotação não cria pedido e permite nova cotação', async ({ page }) => {
+ await setupCheckout(page)
+ await scenario(page, 'timeout')
+ await page.getByRole('button', { name: 'Cotar compra', exact: true }).click()
+ await expect(page.getByRole('alert')).toBeVisible({ timeout: 20_000 })
+ await expect(page.getByRole('button', { name: 'Confirmar compra', exact: true })).toBeDisabled()
+ await scenario(page, 'success')
+ await page.getByRole('button', { name: 'Cotar compra', exact: true }).click()
+ await expect(page.getByTestId('quote-total')).toHaveText('2.396 ETH')
+ expect((await api(page, 'orders')).data.orders).toHaveLength(0)
+})
+
+test('expiração durante checkout protege a página e preserva o destino', async ({ page }) => {
+ await setupCheckout(page)
+ await page.evaluate(() => localStorage.setItem('kurio:auth-scenario', 'expired'))
+ await page.getByRole('button', { name: 'Cotar compra', exact: true }).click()
+ await expect(page.getByRole('form', { name: 'Login', exact: true })).toBeVisible()
+ expect(new URL(page.url()).searchParams.get('redirect')).toBe('/pagamento')
+ expect(new URL(page.url()).searchParams.get('reason')).toBe('expired')
+})
+
+test('latência preserva loading e erro de acompanhamento permite recuperar pedido', async ({ page }) => {
+ await setupCheckout(page)
+ await scenario(page, 'latency')
+ await page.goto('/pagamento')
+ await expect(page.getByRole('status', { name: '', exact: true }).filter({ hasText: 'Carregando checkout' })).toBeVisible()
+ await expect(page.getByRole('button', { name: 'Cotar compra', exact: true })).toBeEnabled()
+ await quoteAndConnect(page)
+ await scenario(page, 'pending')
+ await page.getByRole('button', { name: 'Confirmar compra', exact: true }).click()
+ await expect(page.getByRole('heading', { name: 'Pagamento pendente', exact: true })).toBeVisible()
+ await scenario(page, 'error500')
+ await expect(page.getByRole('alert')).toContainText('Simulador indisponível')
+ await expect(page.getByRole('heading', { name: 'Pagamento pendente', exact: true })).toBeVisible()
+ await scenario(page, 'success')
+ await page.getByRole('button', { name: 'Recuperar pedido', exact: true }).click()
+ await confirmed(page)
+})

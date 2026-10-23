@@ -1,0 +1,45 @@
+/* Somente controles e estados do catálogo; dimensões dos cards/hero vêm do layout aprovado. */
+.catalog-toolbar { position: relative; }
+.catalog-search-disclosure { position: absolute; right: 276px; top: -2px; z-index: 3; }
+.catalog-search-disclosure summary { cursor: pointer; list-style: none; color: var(--muted-foreground); }
+.catalog-search-disclosure summary::-webkit-details-marker { display: none; }
+.catalog-search-disclosure svg { width: 19px; height: 19px; }
+.catalog-search-disclosure form { position: absolute; right: 0; top: 28px; width: min(300px, 70vw); padding: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
+.catalog-search-disclosure label { display: flex; align-items: center; gap: 8px; }
+.catalog-search-disclosure input { width: 100%; min-width: 0; font-size: 13px; padding: 8px 0; }
+.catalog-search-disclosure input::placeholder { color: var(--muted-foreground); }
+.catalog-search-disclosure button { display: grid; place-items: center; }
+.catalog-price-inputs { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+.catalog-price-inputs input { width: 5.5ch; min-width: 0; border-bottom: 1px solid var(--border); padding: 2px 0; text-align: center; }
+.filter-panel button[aria-pressed="true"] { color: var(--primary); font-weight: 700; }
+.catalog-classification-note { font-size: 10px; line-height: 16px; color: var(--muted-foreground); margin: 16px 0 0; }
+.catalog-reset { color: var(--primary); font-size: 12px; line-height: 18px; margin-top: 12px; }
+.catalog-page-size { font-size: 11px; line-height: 18px; color: var(--muted-foreground); display: flex; align-items: center; gap: 6px; }
+.catalog-page-size select { padding: 5px; background: var(--card); border: 1px solid var(--border); border-radius: 4px; }
+.catalog-feedback { display: grid; justify-items: start; align-content: center; min-height: 350px; gap: 16px; padding: 24px; border: 1px solid var(--border); border-radius: 8px; }
+.catalog-feedback h2, .catalog-feedback p { margin: 0; line-height: 1.5; }
+.catalog-feedback p { color: var(--muted-foreground); font-size: 13px; }
+.catalog-updating .nft-grid:not(.catalog-skeletons) { opacity: .65; }
+.catalog-skeleton-art { aspect-ratio: 1; border-radius: 16px; }
+.catalog-skeletons .catalog-skeleton-line { width: 75%; height: 20px; border-radius: 3px; }
+.catalog-skeletons p.catalog-skeleton-line { width: 40%; }
+.catalog-shimmer { background: linear-gradient(100deg, var(--muted) 20%, #513321 45%, var(--muted) 70%); background-size: 240% 100%; animation: catalog-shimmer 1.4s linear infinite; }
+@keyframes catalog-shimmer { to { background-position: -240% 0; } }
+.catalog-filter-dialog:not([open]) { display: none; }
+.catalog-filter-dialog { position: fixed; inset: 0; margin: auto; width: min(390px, calc(100% - 32px)); max-height: calc(100dvh - 48px); overflow: auto; overscroll-behavior: contain; padding: 20px; border: 1px solid var(--border); border-radius: 16px; background: var(--card); color: var(--foreground); }
+.catalog-filter-dialog::backdrop { background: #140d0acc; }
+.catalog-filter-dialog > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.catalog-filter-dialog > header h2 { margin: 0; font-size: 16px; }
+.catalog-filter-dialog .filter-panel { padding: 0; }
+.catalog-filter-dialog .sort-label { display: grid; gap: 8px; margin: 24px 0; white-space: normal; }
+.catalog-filter-dialog .sort-label select { max-width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 4px; }
+@media (max-width: 1200px) and (min-width: 801px) { .catalog-search-disclosure { position: relative; right: auto; top: 0; } }
+@media (max-width: 800px) {
+ .catalog-toolbar .catalog-search-disclosure { display: none; }
+ .mobile-search form { display: flex; flex: 1; min-width: 0; }
+ .mobile-search form button { display: grid; place-items: center; flex: none; width: 20px; min-width: 0; min-height: 0; padding: 0; background: transparent; color: inherit; border-radius: 0; }
+ .home-page .catalog-skeletons .catalog-skeleton-line { height: 18px; }
+ .catalog-feedback { min-height: 300px; padding: 20px; }
+ .catalog-filter-dialog { padding: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { .catalog-shimmer { animation: none; background: var(--muted); } }

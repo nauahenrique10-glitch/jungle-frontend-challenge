@@ -1,0 +1,36 @@
+.auth-field-error { display: block; color: #efb38a; font-size: 11px; line-height: 16px; margin-top: 4px; }
+.auth-fields input[aria-invalid="true"] { border-color: #efb38a; }
+.auth-form-error, .auth-message { color: #efb38a; font-size: 12px; line-height: 18px; margin: 0; overflow-wrap: anywhere; }
+.auth-message { margin-bottom: 16px; }
+.auth-form-error:focus { outline-offset: 3px; }
+.auth-fields[aria-busy="true"] { cursor: progress; }
+.auth-panel:has(.auth-field-error, .auth-form-error) { padding-bottom: 80px; }
+.account-field-skeleton { height: 64px; border-radius: 4px; }
+.account-loading > p { font-size: 12px; margin-top: 24px; }
+.session-feedback { min-height: 60vh; padding-block: 48px; }
+.account-form > button[type="submit"] { min-width: 130px; min-height: 40px; }
+.account-form .preview-field [aria-invalid="true"] { border-color: #efb38a; }
+.account-preview input[type="checkbox"]:checked { background: var(--primary); box-shadow: inset 0 0 0 3px var(--background); }
+.account-feedback { margin: 12px 0; color: var(--muted-foreground); font-size: 12px; line-height: 18px; overflow-wrap: anywhere; }
+.account-error { color: #efb38a; }
+.account-form .avatar-preview > span { overflow: hidden; flex-shrink: 0; }
+.avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-feedback { flex-basis: 100%; }
+.avatar-feedback:empty { display: none; }
+.avatar-feedback .account-feedback { margin: 0; }
+.account-wallet-list { display: grid; gap: 12px; margin-top: 16px; }
+.account-wallet-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 0; border-top: 1px solid var(--border); min-width: 0; }
+.account-wallet-row > div { min-width: 0; }
+.account-wallet-row h3 { font-size: 13px; line-height: 20px; margin: 0; }
+.account-wallet-row p { color: var(--muted-foreground); overflow-wrap: anywhere; font-size: 12px; line-height: 18px; margin: 4px 0 0; }
+.account-wallet-row button, .account-cancel { color: var(--primary); font-size: 12px; line-height: 18px; }
+.account-wallet-row > div:last-child { display: flex; gap: 16px; flex-shrink: 0; }
+.account-cancel { margin-left: 16px; }
+@media (max-width: 800px) {
+ .account-form > button[type="submit"] { width: 100%; min-height: 48px; }
+ .account-wallet-row { align-items: start; flex-direction: column; gap: 8px; }
+ .account-wallet-row > div:last-child { flex-wrap: wrap; }
+ .account-navigation { position: relative; }
+ .account-navigation nav > .account-logout { display: flex; position: absolute; right: 12px; top: 6px; min-height: 32px; margin: 0; padding: 4px 8px; border: 0; font-size: 12px; }
+ .auth-panel:has(.auth-field-error, .auth-form-error) { padding-bottom: 24px; }
+}

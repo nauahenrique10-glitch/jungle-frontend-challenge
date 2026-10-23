@@ -1,0 +1,54 @@
+.functional-checkout fieldset { border: 0; padding: 0; min-width: 0; }
+.functional-checkout legend { font-weight: 700; margin-block: 12px; font-size: 16px; }
+.checkout-wallets label { display: flex; align-items: center; gap: 16px; border: 1px solid var(--border); border-radius: 6px; padding: 14px; margin-bottom: 12px; }
+.checkout-wallets label:has(input:checked) { border-color: var(--primary); }
+.checkout-wallets label span { display: grid; gap: 5px; }
+.checkout-wallets small { color: var(--muted-foreground); font-size: 13px; line-height: 18px; }
+.functional-checkout input[type=radio] { accent-color: var(--primary); width: 16px; height: 16px; flex-shrink: 0; }
+.functional-checkout input[type=radio]:checked { background: radial-gradient(circle, var(--primary) 0 4px, transparent 4.5px); }
+.functional-checkout .wallet-choices label:has(input:checked) { border: 1px solid var(--primary); }
+.functional-checkout .preview-field select { height: 40px; border: 1px solid var(--border); border-radius: 3px; background: transparent; color: var(--muted-foreground); padding: 8px 12px; }
+.checkout-actions { display: grid; gap: 10px; margin-block: 16px; }
+.checkout-note { margin-top: 28px; }
+.checkout-actions button { min-height: 40px; white-space: normal; line-height: 18px; }
+.checkout-item { min-width: 0; gap: 8px; }
+.checkout-item .artwork-row-copy { min-width: 0; }
+.checkout-quantity { white-space: nowrap; }
+.checkout-item .artwork-row-copy strong { font-size: 14px; line-height: 18px; overflow-wrap: anywhere; }
+.checkout-item .artwork-row-copy small { font-size: 11px; line-height: 16px; overflow-wrap: anywhere; }
+.checkout-item .artwork-row-copy small { display: block; }
+.checkout-item > span { flex-shrink: 0; font-weight: 700; font-size: 15px; white-space: nowrap; }
+.functional-checkout .checkout-submit { margin-top: 16px; }
+.checkout-skeleton { min-height: 600px; border-radius: 12px; padding: 28px; color: var(--muted-foreground); }
+.checkout-order-error { padding: 24px; line-height: 22px; }
+.functional-receipt .receipt-order-id { font-size: 11px; overflow-wrap: anywhere; }
+.functional-receipt .receipt-metadata dd { overflow-wrap: anywhere; line-height: 20px; }
+.functional-receipt .receipt-body .summary-values > div:nth-child(-n+2) { display: flex; }
+.functional-receipt .receipt-body p { line-height: 22px; overflow-wrap: anywhere; }
+.functional-receipt .receipt-panel > header { padding-top: 24px; padding-bottom: 20px; }
+.functional-receipt .receipt-panel h1 { font-size: 16px; line-height: 22px; }
+.functional-checkout .commerce-message, .functional-checkout .commerce-error { line-height: 20px; }
+@media (min-width: 801px) {
+ .functional-checkout .checkout-wallets { grid-column: 1; }
+ .functional-checkout .checkout-wallets { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+ .functional-checkout .checkout-wallets label { gap: 8px; padding: 10px; }
+ .functional-checkout .checkout-wallets small { font-size: 11px; }
+ .functional-checkout .wallet-choices label { margin: 12px 0; padding: 10px; }
+ .functional-checkout .checkout-grid { grid-template-columns: minmax(0, 1fr) 405px; gap: 32px; }
+}
+@media (max-width: 800px) {
+ .functional-checkout .checkout-wallets { order: -3; }
+ .functional-checkout .wallet-choices { order: -2; }
+ .functional-checkout .checkout-wallets label { background: var(--card); border-radius: 16px; min-height: 92px; padding: 14px 18px; margin-bottom: 20px; }
+ .functional-checkout .checkout-wallets legend { margin-top: 4px; }
+ .functional-checkout .checkout-actions { order: -1; margin-top: 0; }
+ .functional-checkout .checkout-summary .summary-values > div { display: flex; gap: 16px; font-size: 12px; line-height: 18px; }
+ .functional-checkout .checkout-summary .summary-values > div:last-child { justify-content: space-between; font-size: 17px; margin-top: 16px; }
+ .functional-checkout .checkout-summary .summary-values { margin-top: 10px; }
+ .functional-checkout .checkout-submit { min-height: 60px; margin-top: 32px; }
+ .functional-checkout .preview-notice { line-height: 16px; }
+ .functional-receipt .checkout-item { flex-wrap: wrap; }
+ .functional-receipt .checkout-item .artwork-row-copy { flex: 1; }
+ .functional-receipt .checkout-item > span { margin-left: auto; font-size: 14px; }
+ .functional-receipt .summary-values { font-size: 12px; line-height: 18px; }
+}
