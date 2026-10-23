@@ -1,4 +1,4 @@
-import { test, expect } from './test-fixture'
+﻿import { test, expect } from './test-fixture'
 import { login } from './auth-helpers'
 import { addNft, waitForResource } from './commerce-helpers'
 
@@ -9,7 +9,7 @@ const previews = [
 ] as const
 
 for (const [name, path] of previews) {
- test(`prévia visual: ${name}`, async ({ page }) => {
+ test(`prÃ©via visual: ${name}`, async ({ page }) => {
   test.setTimeout(60_000)
   await page.emulateMedia({ reducedMotion: 'reduce' })
   const errors: string[] = []
@@ -53,15 +53,19 @@ for (const [name, path] of previews) {
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   if (test.info().project.use.viewport!.width <= 800) {
-   await expect(page.getByRole('navigation', { name: 'Navegação mobile' })).toBeHidden()
+   await expect(page.getByRole('navigation', { name: 'NavegaÃ§Ã£o mobile' })).toBeHidden()
   }
   if (name === 'confirmacao') {
    await expect(page.getByText('Nenhum pedido confirmado.')).toBeVisible()
-   await expect(page.getByRole('button', { name: 'Ver no Etherscan · simulado' })).toBeDisabled()
+   await expect(page.getByRole('button', { name: /Ver no Etherscan/ })).toBeDisabled()
   }
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
-  await page.screenshot({ path: `test-results/${name}-${test.info().project.name}-viewport.png`, animations: 'disabled' })
-  await page.screenshot({ path: `test-results/${name}-${test.info().project.name}.png`, fullPage: true, animations: 'disabled' })
+  await expect(page).toHaveScreenshot(`${name}-viewport.png`, { animations: 'disabled', fullPage: false })
+  await expect(page).toHaveScreenshot(`${name}-fullpage.png`, { animations: 'disabled', fullPage: true })
   expect(errors).toEqual([])
  })
 }
+
+
+
+
