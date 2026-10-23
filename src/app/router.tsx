@@ -1,21 +1,23 @@
-﻿import { createRootRoute, createRoute, createRouter, redirect, useNavigate, useSearch, useParams, type SearchSchemaInput } from '@tanstack/react-router'
+﻿import { createRootRoute, createRoute, createRouter, redirect, useNavigate, useSearch, useParams, lazyRouteComponent, type SearchSchemaInput } from '@tanstack/react-router'
 import { Layout } from '@/components/layout'
 import { HomePage } from '@/features/catalog/home-page'
 import { ProvisionalPage } from '@/routes/provisional-page'
-import { NftDetailPage } from '@/features/nft/detail-preview'
 import { normalizeDetailSearch } from '@/features/nft/detail-state'
 import type { NftDetailSearch } from '@/types/nft-detail'
-import { CartPreview } from '@/features/cart/cart-preview'
-import { CheckoutPreview, ReceiptPreview } from '@/features/checkout/checkout-preview'
-import { AccountPreview } from '@/features/account/account-preview'
-import { AuthPreview } from '@/features/account/auth-preview'
 import { normalizeCatalogParams } from '@/features/catalog/catalog-params'
 import type { CatalogParams } from '@/types/catalog'
 import { normalizeAuthSearch, type AuthSearch } from '@/features/account/auth-validation'
 import { queryClient } from './query-client'
 import { sessionOptions } from '@/services/auth'
 import type { ParsedLocation } from '@tanstack/react-router'
-import { FavoritesPage } from '@/features/cart/favorites-page'
+
+const NftDetailPage = lazyRouteComponent(() => import('@/features/nft/detail-preview'), 'NftDetailPage')
+const CartPreview = lazyRouteComponent(() => import('@/features/cart/cart-preview'), 'CartPreview')
+const CheckoutPreview = lazyRouteComponent(() => import('@/features/checkout/checkout-preview'), 'CheckoutPreview')
+const ReceiptPreview = lazyRouteComponent(() => import('@/features/checkout/checkout-preview'), 'ReceiptPreview')
+const AccountPreview = lazyRouteComponent(() => import('@/features/account/account-preview'), 'AccountPreview')
+const AuthPreview = lazyRouteComponent(() => import('@/features/account/auth-preview'), 'AuthPreview')
+const FavoritesPage = lazyRouteComponent(() => import('@/features/cart/favorites-page'), 'FavoritesPage')
 
 async function requireSession({ location }: { location: ParsedLocation }) {
  const result = await queryClient.fetchQuery({ ...sessionOptions(), staleTime: 0 }).catch(() => {
@@ -86,4 +88,5 @@ export const router = createRouter({
  },
 })
 declare module '@tanstack/react-router' { interface Register { router: typeof router } }
+
 

@@ -286,5 +286,91 @@
 @media (max-width: 800px) {
  .home-page .nft-card > p { color: var(--primary); font-size: 15px; line-height: 18px; }
  .nft-card del { font-size: 11px; margin-left: 4px; }
+}/* ===== Microinterações finais ===== */
+
+.nft-card {
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.nft-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 10%);
+}
+
+.nft-card .nft-image {
+  overflow: hidden;
+}
+
+.nft-card .nft-image img {
+  transition: transform 260ms ease;
+}
+
+.nft-card:hover .nft-image img {
+  transform: scale(1.025);
+}
+
+button,
+.button,
+.icon-link,
+.header-actions a,
+.mobile-nav a,
+.catalog-tabs button,
+.pagination button {
+  transition: transform 150ms ease, opacity 150ms ease, background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+button:not(:disabled):hover,
+.button:hover {
+  transform: translateY(-1px);
+}
+
+button:not(:disabled):active,
+.button:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.desktop-links a,
+.footer-links a {
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.desktop-links a:hover,
+.footer-links a:hover {
+  opacity: 0.72;
+}
+
+.card-favorite-preview button {
+  transition: transform 160ms ease, background-color 160ms ease;
+}
+
+.card-favorite-preview button:not(:disabled):hover {
+  transform: scale(1.08);
+}
+
+.catalog-filter-dialog {
+  animation: dialog-pop 180ms ease-out;
+}
+
+@keyframes dialog-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
